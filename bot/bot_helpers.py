@@ -17,7 +17,57 @@ def get_time_response(res):
 
     try:
         tm = datetime.time.fromisoformat(res)
+        utc_offset = get_utc_offset(tm)
+        prefix = "+" if utc_offset > 0 else ""
+        tm_str = f"{prefix}{utc_offset}"
     except ValueError:
-        tm = None
+        tm_str = None
 
-    return tm
+    return tm_str
+
+
+def get_time_of_day(res):
+
+    time_list = [d.strip() for d in res.split(",")]
+    try:
+        iso_list = [datetime.time.fromisoformat(d) for d in time_list]
+    except ValueError:
+        return None
+
+    if iso_list[0] >= iso_list[1]:
+        iso_list = None
+
+    return iso_list
+
+
+def get_reasonable_hours(res):
+    try:
+        hrs = int(res)
+        if hrs >= 12:
+            hrs = None
+    except ValueError:
+        hrs = None
+    return hrs
+
+
+def get_dates(res):
+    date_list = [d.strip() for d in res.split(",")]
+    try:
+        iso_list = [datetime.date.fromisoformat(d) for d in date_list]
+    except ValueError:
+        return None
+
+    # mirai
+    for d in iso_list:
+        if d < datetime.date.today():
+            iso_list = None
+
+    return iso_list
+
+
+def get_expiration(res):
+    try:
+        hrs = int(res)
+    except ValueError:
+        hrs = None
+    return hrs

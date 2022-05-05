@@ -3,6 +3,7 @@ from discord.ext import commands
 import logging
 import sys
 import bot_helpers as bh
+from solaire import Solaire
 
 logger = logging.getLogger("discord")
 handler = logging.StreamHandler(sys.stdout)
@@ -12,7 +13,7 @@ logger.setLevel(logging.INFO)
 with open("./SECRETS/bot_key", "r") as f:
     bot_key = f.read()
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("!"))
+bot = Solaire(command_prefix=commands.when_mentioned_or("!"))
 
 
 @bot.event
@@ -27,39 +28,77 @@ async def testo(ctx):
 
 
 @bot.command()
-async def plan(ctx, event_name):
+async def plan(ctx, *event_name):
+
     author = ctx.message.author
+    event_name = " ".join(event_name)
 
     logger.info(f"!plan received from {author}")
 
-    def check_response(m):
-
-        return m.author == author and isinstance(m.channel, discord.DMChannel)
-
-    await author.send(f"Would you like to continue planning event {event_name}?")
-
-    reply = await bot.wait_for("message", check=check_response, timeout=60)
-
-    await author.send(
-        f"Please enter your current time as HH:MM (24H) (so I can determine what time zone you're in)."
+    # Verify Continue
+    continue_resp = await bot.validated_response(
+        ctx,
+        f"Would you like to continue planning event {event_name}?",
+        "wat",
+        lambda x: x,
     )
 
-    is_valid_time = False
+    if continue_resp.lower() not in {"yes", "y", "ye", "ya", "yiss"}:
+        logger.info("dirty quitter")
+        return
 
-    while not is_valid_time:
+    # Time Zone Determination
+    tz_resp = await bot.validated_response(
+        ctx,
+        "Please enter your current time as HH:MM (24H) (so I can determine what time zone you're in).",
+        "Please provide a time in HH:MM (24H) format.",
+        bh.get_time_response,
+    )
 
-        reply = await bot.wait_for("message", check=check_response, timeout=60)
+    await author.send(f"You're in the UTC{tz_resp} timezone.")
 
-        formatted_reply = bh.get_time_response(reply.content)
+    # Event Dates
+    date_resp = await bot.validated_response(
+        ctx,
+        "What dates would like your event to be? (Please give dates as **YYYY-MM-DD**, separated by commas.)",
+        "Please give dates **in the future** as **YYYY-MM-DD**, separated by commas.",
+        bh.get_dates,
+    )
 
-        if formatted_reply is not None:
-            is_valid_time = True
-            utc_offset = bh.get_utc_offset(formatted_reply)
-            prefix = "+" if utc_offset > 0 else ""
-        else:
-            await author.send("Please provide a time in HH:MM (24H) format.")
+    # Time of Day
+    time_of_day = await bot.validated_response(
+        ctx,
+        "What range of times should be available each day? (Please provide start and end times as **HH:MM, HH:MM** (24H) your local time.)",
+        "Please provide start and end times in order as **HH:MM, HH:MM** (24H) your local time.",
+        bh.get_time_of_day,
+    )
 
-    await author.send(f"You're in the UTC{prefix}{utc_offset} timezone.")
+    # Event Length
+    event_length = await bot.validated_response(
+        ctx,
+        "How long should your event be, in hours?",
+        "This should be a number of hours, and less than 12.",
+        bh.get_reasonable_hours,
+    )
+
+    # Expiration time
+    expiration_time = await bot.validated_response(
+        ctx,
+        "How many hours should we wait for responses before setting a time?",
+        "This should be a number of hours",
+        bh.get_expiration,
+    )
+
+    logger.info(event_name)
+    logger.info(date_resp)
+    logger.info(time_of_day)
+    logger.info(event_length)
+    logger.info(expiration_time)
+
+
+@bot.command()
+async def cancel():
+    pass
 
 
 bot.run(bot_key)
