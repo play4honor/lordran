@@ -26,7 +26,7 @@ def get_time_response(res):
     return tm_str
 
 
-def get_time_of_day(res):
+def get_time_range(res):
 
     time_list = [d.strip() for d in res.split(",")]
     try:
@@ -34,10 +34,10 @@ def get_time_of_day(res):
     except ValueError:
         return None
 
-    if iso_list[0] >= iso_list[1]:
-        iso_list = None
+    if len(iso_list) != 2 or iso_list[0] >= iso_list[1]:
+        return None
 
-    return iso_list
+    return [str(t) for t in iso_list]
 
 
 def get_reasonable_hours(res):
@@ -60,9 +60,9 @@ def get_dates(res):
     # mirai
     for d in iso_list:
         if d < datetime.date.today():
-            iso_list = None
+            return None
 
-    return iso_list
+    return [d.isoformat() for d in iso_list]
 
 
 def get_expiration(res):
