@@ -1,31 +1,33 @@
 from flask import Flask, request, g, jsonify
 import uuid
+from form_helpers import FormWriter
 
 import sqlite3
 
 app = Flask(__name__)
+form_writer = FormWriter()
 
 @app.route("/create_form", methods=['POST'])
 def create_form():
 
     input_json = request.get_json()
 
-    e_uuid = uuid.uuid4().hex
+    form_id, form_url = form_writer.create_form(input_json)
 
     db = get_db()
     cur = db.cursor()
 
     cur.execute(
         "INSERT INTO events VALUES (?, ?, ?, ?, ?)",
-        (e_uuid, input_json["name"], input_json["event_length"], input_json["time_of_day"][0], input_json["time_of_day"][1])
+        (form_id, input_json["name"], input_json["event_length"], input_json["time_of_day"][0], input_json["time_of_day"][1])
     )
 
-    date_list = [(e_uuid, dt) for dt in input_json["dates"]]
+    date_list = [(form_id, dt) for dt in input_json["dates"]]
     cur.executemany("INSERT INTO event_dates VALUES (?, ?)", date_list)
 
     db.commit()
 
-    return jsonify(success=True)
+    return jsonify(success=True, form_url=form_url)
 
 @app.route("/set_tz", methods=['POST'])
 def set_tz():
@@ -73,10 +75,10 @@ def get_db():
 
         cur = g.db.cursor()
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS events (uuid text, name text, event_length real, time_range_start text, time_range_end text);"
+            "CREATE TABLE IF NOT EXISTS events (form_id text, name text, event_length real, time_range_start text, time_range_end text);"
         )
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS event_dates (uuid text, date text);"
+            "CREATE TABLE IF NOT EXISTS event_dates (form_id text, date text);"
         )
         cur.execute(
             "CREATE TABLE IF NOT EXISTS time_zones (uid integer, tz integer);"

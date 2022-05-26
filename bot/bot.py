@@ -125,9 +125,11 @@ async def plan(ctx, *event_name):
 
     response = requests.post(QUELAAG_CREATE_URL, json=event_request)
 
-    if response.status_code != 200:
+    if response.status_code == 200:
+        await author.send(f"Planning complete, see {ctx.channel.mention} for your planning link")
+        await ctx.channel.send(f"Planning URL for {event_request['name']}: {response.json()['form_url']}")
+    else:
         await author.send("Failed to save event details, go yell at your bot admin")
-
 
 @bot.command()
 async def cancel():
