@@ -3,7 +3,7 @@ from discord.ext import commands
 import logging
 import sys
 import bot_helpers as bh
-from solaire import Solaire
+from solaire import Solaire, create_event_request_json
 
 import requests
 
@@ -115,13 +115,14 @@ async def plan(ctx, *event_name):
     logger.info(event_length)
     logger.info(expiration_time)
 
-    event_request = {
-        "name": event_name,
-        "dates": date_resp,
-        "time_of_day": time_of_day,
-        "event_length": event_length,
-        "window_end_time": expiration_time,
-    }
+    event_request = create_event_request_json(
+        event_name,
+        date_resp,
+        time_of_day, 
+        event_length,
+        expiration_time,
+        tz_resp
+    )
 
     response = requests.post(QUELAAG_CREATE_URL, json=event_request)
 

@@ -1,6 +1,5 @@
 from flask import Flask, request, g, jsonify
-import uuid
-from form_helpers import FormWriter
+from form_helpers import FormReader, FormWriter
 
 import sqlite3
 
@@ -65,6 +64,16 @@ def get_tz():
 
 @app.route("/check_closing")
 def check_closing():
+
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute(
+        "SELECT * FROM events WHERE uid = :uid", {"uid": req["user_id"]}
+    )
+
+    reader = FormReader()
+    reader.read_form
     pass
 
 def get_db():
@@ -75,7 +84,7 @@ def get_db():
 
         cur = g.db.cursor()
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS events (form_id text, name text, event_length real, time_range_start text, time_range_end text);"
+            "CREATE TABLE IF NOT EXISTS events (form_id text, name text, event_length real, time_range_start text, time_range_end text, scheduled integer);"
         )
         cur.execute(
             "CREATE TABLE IF NOT EXISTS event_dates (form_id text, date text);"
