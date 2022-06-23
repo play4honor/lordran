@@ -20,7 +20,7 @@ def create_event_request_json(
         "dates": date_resp,
         "time_of_day": time_of_day,
         "event_length": event_length,
-        "window_end_time": expiration_time,
+        "expiration_time": expiration_time,
     }
 
 

@@ -1,9 +1,11 @@
+from datetime import timedelta
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import logging
 import sys
 import bot_helpers as bh
 from solaire import Solaire, create_event_request_json
+from scheduler import DiscordEvents
 
 import requests
 
@@ -11,6 +13,7 @@ import requests
 QUELAAG_CREATE_URL = "http://127.0.0.1:5000/create_form"
 QUELAAG_GET_TZ_URL = "http://127.0.0.1:5000/get_tz"
 QUELAAG_SET_TZ_URL = "http://127.0.0.1:5000/set_tz"
+QUELAAG_CHECK_CLOSE_URL = "http://127.0.0.1:5000/check_closing"
 
 logger = logging.getLogger("discord")
 handler = logging.StreamHandler(sys.stdout)
@@ -26,6 +29,7 @@ bot = Solaire(command_prefix=commands.when_mentioned_or("!"))
 @bot.event
 async def on_ready():
     logger.info(f"Bot {bot.user} active")
+    check_for_ready_events.start()
 
 
 @bot.command()
@@ -109,6 +113,8 @@ async def plan(ctx, *event_name):
         bh.get_expiration,
     )
 
+    logger.info(f"guild: {ctx.guild.id}")
+    logger.info(f"channel: {ctx.channel.id}")
     logger.info(event_name)
     logger.info(date_resp)
     logger.info(time_of_day)
@@ -116,6 +122,8 @@ async def plan(ctx, *event_name):
     logger.info(expiration_time)
 
     event_request = create_event_request_json(
+        ctx.guild.id,
+        ctx.channel.id,
         event_name,
         date_resp,
         time_of_day, 
@@ -144,5 +152,22 @@ async def cancel():
 #         await message.channel.send("You are not currently planning an event. Please use `!plan` in a channel to start a planning session.")
 #     else:
 #         pass
+
+@tasks.loop(minutes=1)
+async def check_for_ready_events():
+    response = requests.get(QUELAAG_CHECK_CLOSE_URL)
+    if len(parsed_response := response.json()) != 0: # This is totally clear.
+        event_manager = DiscordEvents(bot_key)
+
+        for event in parsed_response:
+            await event_manager.create_guild_event(
+                guild_id=event["guild_id"],
+                event_name=event["name"],
+                event_description=f"Solaire scheduled event for {event['name']}",
+                event_start_time=event["schedule_time"],
+                event_end_time=event["schedule_time"] + timedelta(hours=event["event_length"]),
+                event_metadata={}
+            )
+            await bot.fetch_channel(event["channel_id"]).send(f"Event Scheduled for {event['name']}")        
 
 bot.run(bot_key)
