@@ -12,9 +12,11 @@ def check_response(m, author):
 
 
 def create_event_request_json(
-    event_name, date_resp, time_of_day, event_length, expiration_time, timezone
+    guild_id, channel_id, event_name, date_resp, time_of_day, event_length, expiration_time, timezone
 ):
     return {
+        "guild_id": guild_id,
+        "channel_id": channel_id,
         "timezone": timezone,
         "name": event_name,
         "dates": date_resp,
