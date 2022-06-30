@@ -126,10 +126,10 @@ def build_availability(parsed_results, start_time, end_time, event_length):
 
     start_times = Form.make_hours_array(start_time, end_time, event_length)
     
-    for start_time in start_times:
+    for s in start_times:
         for res in parsed_results:
             for date, times in res.items():
-                if set(times).issuperset(set(range(start_time, start_time + event_length))):
-                    availability[(date, start_time)] += 1
+                if set(times).issuperset(set(range(s, s + int(event_length)))):
+                    availability[(date, s)] += 1
 
     return max(availability, key=availability.get)

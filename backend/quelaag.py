@@ -15,7 +15,7 @@ def create_form():
 
     expiration_time = int(
         (
-            datetime.utcnow()
+            datetime.datetime.utcnow()
             + datetime.timedelta(seconds=3600 * input_json["expiration_time"])
         ).timestamp()
     )
@@ -84,7 +84,7 @@ def get_tz():
 @app.route("/check_closing", methods=["GET"])
 def check_closing():
 
-    right_now = datetime.utcnow().timestamp()
+    right_now = datetime.datetime.utcnow().timestamp()
 
     db = get_db()
     cur = db.cursor()
@@ -138,29 +138,29 @@ def get_db():
     if "db" not in g:
         g.db = sqlite3.connect("./db/quelaag.db")
 
-        with g.db.cursor() as cur:
+        cur = g.db.cursor()
 
-            cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS events (
-                    guid_id text,
-                    channel_id text,
-                    form_id text,
-                    name text, 
-                    event_length real, 
-                    time_range_start text, 
-                    time_range_end text, 
-                    expiration_time integer,
-                    scheduled integer
-                );
-                """
-            )
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS event_dates (form_id text, date text);"
-            )
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS time_zones (uid integer, tz integer);"
-            )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS events (
+                guild_id text,
+                channel_id text,
+                form_id text,
+                name text, 
+                event_length real, 
+                time_range_start text, 
+                time_range_end text, 
+                expiration_time integer,
+                scheduled integer
+            );
+            """
+        )
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS event_dates (form_id text, date text);"
+        )
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS time_zones (uid integer, tz integer);"
+        )
 
         g.db.commit()
 

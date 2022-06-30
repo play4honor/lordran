@@ -67,7 +67,7 @@ def get_dates(res):
 
 def get_expiration(res):
     try:
-        hrs = int(res)
+        hrs = float(res)
     except ValueError:
         hrs = None
     return hrs

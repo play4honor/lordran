@@ -5,11 +5,11 @@ import aiohttp
 class DiscordEvents:
     '''Class to create and list Discord events utilizing their API'''
     def __init__(self, discord_token: str) -> None:
-        self.base_api_url = 'https://discord.com/api/v8'
+        self.base_api_url = 'https://discord.com/api/v10'
         self.auth_headers = {
             'Authorization':f'Bot {discord_token}',
             'User-Agent':'Solaire of Astora Python/3.9 aiohttp/3.8.1',
-            'Content-Type':'application/json'
+            'Content-Type':'application/json',
         }
 
     async def list_guild_events(self, guild_id: str) -> list:

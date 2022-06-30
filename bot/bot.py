@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import discord
 from discord.ext import commands, tasks
 import logging
@@ -160,14 +160,17 @@ async def check_for_ready_events():
         event_manager = DiscordEvents(bot_key)
 
         for event in parsed_response:
+            start_time = f"{event['schedule_time'][0]}T{event['schedule_time'][1] :02}:00:00"
+            end_time = f"{event['schedule_time'][0]}T{event['schedule_time'][1]+int(event['event_length']):02}:00:00"
             await event_manager.create_guild_event(
                 guild_id=event["guild_id"],
                 event_name=event["name"],
                 event_description=f"Solaire scheduled event for {event['name']}",
-                event_start_time=event["schedule_time"],
-                event_end_time=event["schedule_time"] + timedelta(hours=event["event_length"]),
-                event_metadata={}
+                event_start_time=start_time,
+                event_end_time=end_time,
+                event_metadata={"location": "Lordran"}
             )
-            await bot.fetch_channel(event["channel_id"]).send(f"Event Scheduled for {event['name']}")        
+            ch = await bot.fetch_channel(event["channel_id"])
+            await ch.send(f"Event Scheduled for {event['name']}")        
 
 bot.run(bot_key)
