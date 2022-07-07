@@ -1,5 +1,6 @@
 from flask import Flask, request, g, jsonify
 from form_helpers import FormReader, FormWriter, build_availability
+import queries as q
 
 import sqlite3
 import datetime
@@ -23,26 +24,7 @@ def create_form():
     form_id, form_url = form_writer.create_form(input_json)
 
     db = get_db()
-    cur = db.cursor()
-    cur.execute(
-        "INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            input_json["guild_id"],
-            input_json["channel_id"],
-            form_id,
-            input_json["name"],
-            input_json["event_length"],
-            input_json["time_of_day"][0],
-            input_json["time_of_day"][1],
-            expiration_time,
-            0,  # Not scheduled yet
-        ),
-    )
-
-    date_list = [(form_id, dt) for dt in input_json["dates"]]
-    cur.executemany("INSERT INTO event_dates VALUES (?, ?)", date_list)
-
-    db.commit()
+    q.add_event_info(db, input_json, form_id, expiration_time)
 
     return jsonify(success=True, form_url=form_url)
 
@@ -53,11 +35,7 @@ def set_tz():
     req = request.get_json()
 
     db = get_db()
-    cur = db.cursor()
-    cur.execute(
-        "INSERT INTO time_zones VALUES (?, ?)", (req["user_id"], req["utc_offset"])
-    )
-    db.commit()
+    q.set_user_tz(db, req)
 
     return jsonify(success=True)
 
@@ -68,11 +46,7 @@ def get_tz():
     req = request.get_json()
 
     db = get_db()
-    cur = db.cursor()
-    cur.execute(
-        "SELECT * FROM time_zones WHERE uid = :uid", {"uid": req["user_id"]}
-    )
-    res = cur.fetchone()
+    res = q.get_user_tz(db, req)
 
     if res is None:
         return jsonify(tz=-100)
@@ -87,21 +61,10 @@ def check_closing():
     right_now = datetime.datetime.utcnow().timestamp()
 
     db = get_db()
-    cur = db.cursor()
-    cur.execute(
-        """
-        SELECT guild_id, channel_id, form_id, name, time_range_start, time_range_end, event_length
-        FROM events 
-        WHERE expiration_time <= :now 
-        AND scheduled = 0;
-        """, 
-        {"now": right_now}
-    )
-
-    new_events = cur.fetchall()
+    new_events = q.get_events(db, right_now)
     
     events = []
-    for guild_id, channel_id, id, name, event_start, event_end, event_length in new_events:
+    for guild_id, channel_id, id, name, event_start, event_end, event_length, timezone in new_events:
         
         event_form = FormReader(id)
         event_form.read_form()
@@ -113,20 +76,14 @@ def check_closing():
             event_length,
         )
 
-        cur.execute(
-            """
-            UPDATE events
-            SET scheduled = 1
-            WHERE form_id = :id
-            """,
-            {"id": id}
-        )
+        q.set_event_as_scheduled(db, id)
         events.append({
             "guild_id": guild_id,
             "channel_id": channel_id,
             "name": name,
             "schedule_time": schedule_time,
             "event_length": event_length,
+            "timezone": timezone,
         })
 
     return jsonify(events)
@@ -138,32 +95,8 @@ def get_db():
     if "db" not in g:
         g.db = sqlite3.connect("./db/quelaag.db")
 
-        cur = g.db.cursor()
-
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS events (
-                guild_id text,
-                channel_id text,
-                form_id text,
-                name text, 
-                event_length real, 
-                time_range_start text, 
-                time_range_end text, 
-                expiration_time integer,
-                scheduled integer
-            );
-            """
-        )
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS event_dates (form_id text, date text);"
-        )
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS time_zones (uid integer, tz integer);"
-        )
-
-        g.db.commit()
-
+        q.init_tables(g.db)
+    
     return g.db
 
 

@@ -59,7 +59,9 @@ class DiscordEvents:
                 async with session.post(event_create_url, data=event_data) as response:
                     response.raise_for_status()
                     assert response.status == 200
+                return True
             except Exception as e:
                 print(f'EXCEPTION: {e}')
+                return False
             finally:
                 await session.close()
