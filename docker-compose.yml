@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+
+  solaire:
+    image: public.ecr.aws/o4s5x0l8/solaire:latest
+    container_name: solaire
+    restart: unless-stopped
+    env_file: SECRETS/solaire.env
+    expose:
+      - 3838
+
+  quelaag:
+    image: public.ecr.aws/o4s5x0l8/quelaag:latest
+    container_name: quelaag
+    restart: unless-stopped
+    env_file: SECRETS/quelaag.env
+    expose:
+      - 3838
