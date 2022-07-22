@@ -11,4 +11,6 @@ COPY quelaag.py queries.py form_helpers.py /src/
 WORKDIR /src
 RUN mkdir db
 
+EXPOSE 3838
+
 CMD ["python", "quelaag.py"]
