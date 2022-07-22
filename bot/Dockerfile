@@ -10,6 +10,4 @@ COPY ./bot/scheduler.py ./bot/solaire_helpers.py ./bot/solaire.py /src/
 
 WORKDIR /src
 
-EXPOSE 3838
-
 CMD ["python", "solaire.py"]

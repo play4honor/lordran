@@ -11,6 +11,7 @@ COPY ./backend/quelaag.py ./backend/queries.py ./backend/form_helpers.py /src/
 WORKDIR /src
 RUN mkdir db
 
-EXPOSE 3838
+EXPOSE 5000
 
-CMD ["python", "quelaag.py"]
+ENV FLASK_APP=quelaag
+CMD ["flask", "run", "--host=0.0.0.0"]

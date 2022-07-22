@@ -8,10 +8,10 @@ from scheduler import DiscordEvents
 import requests
 
 # Should come from the environment
-QUELAAG_CREATE_URL = "http://quelaag:3838/create_form"
-QUELAAG_GET_TZ_URL = "http://quelaag:3838/get_tz"
-QUELAAG_SET_TZ_URL = "http://quelaag:3838/set_tz"
-QUELAAG_CHECK_CLOSE_URL = "http://quelaag:3838/check_closing"
+QUELAAG_CREATE_URL = "http://quelaag:5000/create_form"
+QUELAAG_GET_TZ_URL = "http://quelaag:5000/get_tz"
+QUELAAG_SET_TZ_URL = "http://quelaag:5000/set_tz"
+QUELAAG_CHECK_CLOSE_URL = "http://quelaag:5000/check_closing"
 
 logger = logging.getLogger("discord")
 handler = logging.StreamHandler(sys.stdout)
