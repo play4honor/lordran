@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+
+  solaire:
+    image: public.ecr.aws/o4s5x0l8/solaire:latest
+    container_name: solaire
+    restart: unless-stopped
+    expose:
+      - 3838
+
+  quelaag:
+    image: public.ecr.aws/o4s5x0l8/quelaag:latest
+    container_name: quelaag
+    restart: unless-stopped
+    expose:
+      - 3838
