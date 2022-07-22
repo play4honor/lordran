@@ -100,4 +100,4 @@ def get_db():
     return g.db
 
 
-app.run()
+app.run(port=3838)
