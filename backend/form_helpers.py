@@ -2,18 +2,21 @@ from googleapiclient import discovery
 from google.oauth2 import service_account
 import datetime
 from collections import defaultdict
+import json
+import base64
+import os
 
 SCOPES = [
     "https://www.googleapis.com/auth/forms.body",
     "https://www.googleapis.com/auth/forms.responses.readonly"
     ]
 DISCOVERY_DOC = "https://forms.googleapis.com/$discovery/rest?version=v1"
-SERVICE_KEY = "../SECRETS/lordran-2f175b91e5ec.json"
+SERVICE_KEY = json.loads(base64.b64decode(os.environ["FORMS_CREDENTIALS"]).decode('ascii'))
 
 
 class Form:
     def __init__(self):
-        self.creds = service_account.Credentials.from_service_account_file(
+        self.creds = service_account.Credentials.from_service_account_info(
             SERVICE_KEY, scopes=SCOPES
         )
         self.form_service = discovery.build("forms", "v1", credentials=self.creds)
