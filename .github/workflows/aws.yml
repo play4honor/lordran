@@ -50,3 +50,8 @@ jobs:
           tags: |
             public.ecr.aws/o4s5x0l8/quelaag:latest
             public.ecr.aws/o4s5x0l8/quelaag:${{ steps.sha.outputs.sha7 }}
+      - name: Invoke deployment hook
+        uses: distributhor/workflow-webhook@v1
+        env:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}

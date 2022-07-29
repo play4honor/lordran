@@ -1,0 +1,9 @@
+- id: deploy-app
+  execute-command: "/usr/bin/webhooks/scripts/deploy.sh"
+  command-working-directory: "/home/ec2-user/"
+  match:
+    type: "payload-hmac-sha1"
+    secret: ""
+    parameter:
+      source: "header"
+      name: "X-Hub-Signature"
