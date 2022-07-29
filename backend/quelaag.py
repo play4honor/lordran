@@ -62,13 +62,22 @@ def check_closing():
 
     db = get_db()
     new_events = q.get_events(db, right_now)
-    
+
     events = []
-    for guild_id, channel_id, id, name, event_start, event_end, event_length, timezone in new_events:
-        
+    for (
+        guild_id,
+        channel_id,
+        id,
+        name,
+        event_start,
+        event_end,
+        event_length,
+        timezone,
+    ) in new_events:
+
         event_form = FormReader(id)
         event_form.read_form()
-        
+
         schedule_time = build_availability(
             event_form.parsed_results,
             event_start,
@@ -77,14 +86,16 @@ def check_closing():
         )
 
         q.set_event_as_scheduled(db, id)
-        events.append({
-            "guild_id": guild_id,
-            "channel_id": channel_id,
-            "name": name,
-            "schedule_time": schedule_time,
-            "event_length": event_length,
-            "timezone": timezone,
-        })
+        events.append(
+            {
+                "guild_id": guild_id,
+                "channel_id": channel_id,
+                "name": name,
+                "schedule_time": schedule_time,
+                "event_length": event_length,
+                "timezone": timezone,
+            }
+        )
 
     return jsonify(events)
 
@@ -96,8 +107,5 @@ def get_db():
         g.db = sqlite3.connect("./db/quelaag.db")
 
         q.init_tables(g.db)
-    
+
     return g.db
-
-
-app.run(port=5000)
