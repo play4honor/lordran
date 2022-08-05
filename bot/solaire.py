@@ -146,6 +146,9 @@ async def plan(ctx, *event_name):
 
 @bot.command()
 async def cancel():
+    """
+    Not Implemented
+    """
     pass
 
 # @bot.event
