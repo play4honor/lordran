@@ -32,12 +32,17 @@ async def on_ready():
 
 @bot.command()
 async def testo(ctx):
-
     await ctx.channel.send("Time is distorted in Lordran.")
 
 
 @bot.command()
 async def plan(ctx, *event_name):
+    """
+    Start planning an event via DMs.
+    Lordran will ask questions about your event, and produce a Google Form for
+    others to submit their availability. Once closing time has passed, the event
+    will be scheduled on Discord.
+    """
 
     author = ctx.message.author
     event_name = " ".join(event_name)

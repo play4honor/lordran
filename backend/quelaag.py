@@ -8,6 +8,8 @@ import queries as q
 import sqlite3
 import datetime
 
+import os
+
 app = Flask(__name__)
 form_writer = FormWriter()
 LOCAL_DB_PATH = "./db/quelaag.db"
@@ -112,7 +114,7 @@ def sync_db():
 
     g.s3_client.upload_file(LOCAL_DB_PATH, "lordran-bot", "quelaag.db")
 
-    return
+    return jsonify(success=True)
 
 
 def get_db():
@@ -126,6 +128,7 @@ def get_db():
 
         try:
             g.s3_client.download_file("lordran-bot", "quelaag.db", LOCAL_DB_PATH)
+            os.chmod(LOCAL_DB_PATH, os.stat.S_IRWXU)
         except ClientError as e:
             if int(e.response["Error"]["Code"]) == 404:
                 q.init_tables(g.db)
