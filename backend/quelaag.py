@@ -129,7 +129,7 @@ def get_db():
 
         try:
             g.s3_client.download_file("lordran-bot", "quelaag.db", LOCAL_DB_PATH)
-            os.chmod(LOCAL_DB_PATH, stat.S_IRWXU)
+            os.chmod(LOCAL_DB_PATH, stat.S_IRWXU|stat.S_IRWXO)
         except ClientError as e:
             if int(e.response["Error"]["Code"]) == 404:
                 q.init_tables(g.db)
