@@ -13,3 +13,6 @@ services:
     container_name: quelaag
     restart: unless-stopped
     env_file: SECRETS/quelaag.env
+    volumes: 
+      - ./db:/src/db
+    user: root
