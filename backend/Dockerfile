@@ -9,7 +9,8 @@ RUN apt-get -y update && \
 COPY ./backend/quelaag.py ./backend/queries.py ./backend/form_helpers.py /src/
 
 WORKDIR /src
-RUN mkdir db
+RUN mkdir db && \
+    chmod a+rw db db/*
 
 EXPOSE 5000
 
