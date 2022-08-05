@@ -12,6 +12,7 @@ QUELAAG_CREATE_URL = "http://quelaag:5000/create_form"
 QUELAAG_GET_TZ_URL = "http://quelaag:5000/get_tz"
 QUELAAG_SET_TZ_URL = "http://quelaag:5000/set_tz"
 QUELAAG_CHECK_CLOSE_URL = "http://quelaag:5000/check_closing"
+QUELAAG_SYNC_DB_URL = "http://quelaag:5000/sync_db"
 
 logger = logging.getLogger("discord")
 handler = logging.StreamHandler(sys.stdout)
@@ -134,6 +135,7 @@ async def plan(ctx, *event_name):
     if response.status_code == 200:
         await author.send(f"Planning complete, see {ctx.channel.mention} for your planning link")
         await ctx.channel.send(f"Planning URL for {event_request['name']}: {response.json()['form_url']}. Please respond within {expiration_time} hours.")
+        requests.get(QUELAAG_SYNC_DB_URL)
     else:
         await author.send("Failed to save event details, go yell at your bot admin")
 
@@ -173,5 +175,7 @@ async def check_for_ready_events():
                 await ch.send(f"Event Scheduled for {event['name']}")
             else:
                 logger.info(f"Scheduling Failed for {event['name']} for {start_time} - {end_time}")
+
+        requests.get(QUELAAG_SYNC_DB_URL)
 
 bot.run(bot_key)

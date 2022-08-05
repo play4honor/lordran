@@ -1,3 +1,6 @@
+import boto3
+from botocore.exceptions import ClientError
+
 from flask import Flask, request, g, jsonify
 from form_helpers import FormReader, FormWriter, build_availability
 import queries as q
@@ -7,6 +10,7 @@ import datetime
 
 app = Flask(__name__)
 form_writer = FormWriter()
+LOCAL_DB_PATH = "./db/quelaag.db"
 
 
 @app.route("/create_form", methods=["POST"])
@@ -62,22 +66,13 @@ def check_closing():
 
     db = get_db()
     new_events = q.get_events(db, right_now)
-
+    
     events = []
-    for (
-        guild_id,
-        channel_id,
-        id,
-        name,
-        event_start,
-        event_end,
-        event_length,
-        timezone,
-    ) in new_events:
-
+    for guild_id, channel_id, id, name, event_start, event_end, event_length, timezone in new_events:
+        
         event_form = FormReader(id)
         event_form.read_form()
-
+        
         schedule_time = build_availability(
             event_form.parsed_results,
             event_start,
@@ -86,26 +81,47 @@ def check_closing():
         )
 
         q.set_event_as_scheduled(db, id)
-        events.append(
-            {
-                "guild_id": guild_id,
-                "channel_id": channel_id,
-                "name": name,
-                "schedule_time": schedule_time,
-                "event_length": event_length,
-                "timezone": timezone,
-            }
-        )
+        events.append({
+            "guild_id": guild_id,
+            "channel_id": channel_id,
+            "name": name,
+            "schedule_time": schedule_time,
+            "event_length": event_length,
+            "timezone": timezone,
+        })
 
     return jsonify(events)
+
+
+@app.route("/sync_db", methods=["GET"])
+def sync_db():
+
+    if "s3_client" not in g:
+        g.s3_client = boto3.client('s3')
+                
+    g.s3_client.upload_file(LOCAL_DB_PATH, "lordran-bot", "quelaag.db")
+
+    return
 
 
 def get_db():
 
     # If there's not already a database connection.
     if "db" not in g:
-        g.db = sqlite3.connect("./db/quelaag.db")
+        g.db = sqlite3.connect(LOCAL_DB_PATH)
 
-        q.init_tables(g.db)
+        if "s3_client" not in g:
+            g.s3_client = boto3.client('s3')
+
+        try:   
+            g.s3_client.download_file("lordran-bot", "quelaag.db", LOCAL_DB_PATH)
+        except ClientError as e:
+            if int(e.response["Error"]["Code"]) == 404:
+                q.init_tables(g.db)
+            else:
+                raise e
 
     return g.db
+
+
+app.run(port=5000)
