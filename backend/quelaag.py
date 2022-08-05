@@ -66,13 +66,22 @@ def check_closing():
 
     db = get_db()
     new_events = q.get_events(db, right_now)
-    
+
     events = []
-    for guild_id, channel_id, id, name, event_start, event_end, event_length, timezone in new_events:
-        
+    for (
+        guild_id,
+        channel_id,
+        id,
+        name,
+        event_start,
+        event_end,
+        event_length,
+        timezone,
+    ) in new_events:
+
         event_form = FormReader(id)
         event_form.read_form()
-        
+
         schedule_time = build_availability(
             event_form.parsed_results,
             event_start,
@@ -81,14 +90,16 @@ def check_closing():
         )
 
         q.set_event_as_scheduled(db, id)
-        events.append({
-            "guild_id": guild_id,
-            "channel_id": channel_id,
-            "name": name,
-            "schedule_time": schedule_time,
-            "event_length": event_length,
-            "timezone": timezone,
-        })
+        events.append(
+            {
+                "guild_id": guild_id,
+                "channel_id": channel_id,
+                "name": name,
+                "schedule_time": schedule_time,
+                "event_length": event_length,
+                "timezone": timezone,
+            }
+        )
 
     return jsonify(events)
 
@@ -97,8 +108,8 @@ def check_closing():
 def sync_db():
 
     if "s3_client" not in g:
-        g.s3_client = boto3.client('s3')
-                
+        g.s3_client = boto3.client("s3")
+
     g.s3_client.upload_file(LOCAL_DB_PATH, "lordran-bot", "quelaag.db")
 
     return
@@ -111,9 +122,9 @@ def get_db():
         g.db = sqlite3.connect(LOCAL_DB_PATH)
 
         if "s3_client" not in g:
-            g.s3_client = boto3.client('s3')
+            g.s3_client = boto3.client("s3")
 
-        try:   
+        try:
             g.s3_client.download_file("lordran-bot", "quelaag.db", LOCAL_DB_PATH)
         except ClientError as e:
             if int(e.response["Error"]["Code"]) == 404:
@@ -122,6 +133,3 @@ def get_db():
                 raise e
 
     return g.db
-
-
-app.run(port=5000)
