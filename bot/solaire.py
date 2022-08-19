@@ -61,9 +61,7 @@ async def plan(ctx, *event_name):
         logger.info("dirty quitter")
         return
 
-    user_tz = requests.post(QUELAAG_GET_TZ_URL, json={"user_id": author.id}).json()[
-        "tz"
-    ]
+    user_tz = requests.post(QUELAAG_GET_TZ_URL, json={"user_id": author.id}).json()["tz"]
 
     if user_tz != -100:
         tz_resp = user_tz
