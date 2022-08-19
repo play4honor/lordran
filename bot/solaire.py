@@ -83,7 +83,6 @@ async def plan(ctx, *event_name):
 
     await author.send(f"You're in the UTC{tz_resp} timezone.")
 
-    
     # Event Dates
     date_resp = await bot.validated_response(
         ctx,
@@ -129,20 +128,25 @@ async def plan(ctx, *event_name):
         ctx.channel.id,
         event_name,
         date_resp,
-        time_of_day, 
+        time_of_day,
         event_length,
         expiration_time,
-        tz_resp
+        tz_resp,
     )
 
     response = requests.post(QUELAAG_CREATE_URL, json=event_request)
 
     if response.status_code == 200:
-        await author.send(f"Planning complete, see {ctx.channel.mention} for your planning link")
-        await ctx.channel.send(f"Planning URL for {event_request['name']}: {response.json()['form_url']}. Please respond within {expiration_time} hours.")
+        await author.send(
+            f"Planning complete, see {ctx.channel.mention} for your planning link"
+        )
+        await ctx.channel.send(
+            f"Planning URL for {event_request['name']}: {response.json()['form_url']}. Please respond within {expiration_time} hours."
+        )
         requests.get(QUELAAG_SYNC_DB_URL)
     else:
         await author.send("Failed to save event details, go yell at your bot admin")
+
 
 @bot.command()
 async def cancel():
@@ -150,6 +154,7 @@ async def cancel():
     Not Implemented
     """
     pass
+
 
 # @bot.event
 # async def on_message(message):
@@ -160,30 +165,42 @@ async def cancel():
 #     else:
 #         pass
 
+
 @tasks.loop(minutes=1)
 async def check_for_ready_events():
     response = requests.get(QUELAAG_CHECK_CLOSE_URL)
-    if len(parsed_response := response.json()) != 0: # This is totally clear.
+    if len(parsed_response := response.json()) != 0:  # This is totally clear.
         event_manager = DiscordEvents(bot_key)
 
         for event in parsed_response:
-            start_time = sh.make_iso_timestamp(event['schedule_time'][0], event['schedule_time'][1], event['timezone'])
-            end_time = sh.make_iso_timestamp(event['schedule_time'][0], event['schedule_time'][1]+int(event['event_length']), event['timezone'])
+            start_time = sh.make_iso_timestamp(
+                event["schedule_time"][0], event["schedule_time"][1], event["timezone"]
+            )
+            end_time = sh.make_iso_timestamp(
+                event["schedule_time"][0],
+                event["schedule_time"][1] + int(event["event_length"]),
+                event["timezone"],
+            )
             scheduled = await event_manager.create_guild_event(
                 guild_id=event["guild_id"],
                 event_name=event["name"],
-                event_description=f"Solaire scheduled event for {event['name']}",
+                event_description=f"Solaire scheduled {event['event_length']}-hour event for {event['name']}, {event['schedule_attendees']} available of {event['schedule_responders']} responders",
                 event_start_time=start_time,
                 event_end_time=end_time,
-                event_metadata={"location": "Lordran"}
+                event_metadata={"location": "Lordran"},
             )
             if scheduled:
-                logger.info(f"Scheduled event {event['name']} for {start_time} - {end_time}")
+                logger.info(
+                    f"Scheduled event {event['name']} for {start_time} - {end_time}"
+                )
                 ch = await bot.fetch_channel(event["channel_id"])
                 await ch.send(f"Event Scheduled for {event['name']}")
             else:
-                logger.info(f"Scheduling Failed for {event['name']} for {start_time} - {end_time}")
+                logger.info(
+                    f"Scheduling Failed for {event['name']} for {start_time} - {end_time}"
+                )
 
         requests.get(QUELAAG_SYNC_DB_URL)
+
 
 bot.run(bot_key)

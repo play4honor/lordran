@@ -77,6 +77,13 @@ def get_expiration(res):
     return hrs
 
 def make_iso_timestamp(date, hours, tz=0):
+
+    date_as_date = datetime.date.fromisoformat(date)
+    if hours >= 24:
+        date_as_date += datetime.timedelta(days=1)
+        hours -= 24
+    date = date_as_date.isoformat()
+
     if tz >= 0:
         tz_str = f"+{tz :02}:00"
     else:

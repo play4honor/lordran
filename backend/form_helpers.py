@@ -22,7 +22,7 @@ class Form:
         self.form_service = discovery.build("forms", "v1", credentials=self.creds)
 
     @staticmethod
-    def make_hours_array(start_time, end_time, event_length):
+    def make_hours_array(start_time, end_time):
 
         start_parts = start_time.split(":")
         end_parts = end_time.split(":")
@@ -32,9 +32,7 @@ class Form:
         else:
             first_hour = int(start_parts[0]) + 1
 
-        latest_feasible_start = datetime.timedelta(hours = int(end_parts[0]), minutes = int(end_parts[1])) - datetime.timedelta(hours=event_length)
-
-        last_hour = latest_feasible_start.seconds // 3600 # WHY
+        last_hour = int(end_parts[0])
 
         return range(first_hour, last_hour + 1)
         
@@ -59,7 +57,6 @@ class FormWriter(Form):
         hours = self.make_hours_array(
             form_info["time_of_day"][0],
             form_info["time_of_day"][1],
-            form_info["event_length"],
         )
 
         hr_arr = [self.create_hours_entry(h) for h in hours]
@@ -127,12 +124,17 @@ def build_availability(parsed_results, start_time, end_time, event_length):
 
     availability = defaultdict(lambda: 0)
 
-    start_times = Form.make_hours_array(start_time, end_time, event_length)
+    start_times = Form.make_hours_array(start_time, end_time)
+
+    n_total_responses = len(parsed_results)
     
-    for s in start_times:
-        for res in parsed_results:
-            for date, times in res.items():
-                if set(times).issuperset(set(range(s, s + int(event_length)))):
+    for s in start_times: # all starts
+        for res in parsed_results: # each response
+            for date, times in res.items(): # available date/time
+                if s in times:
                     availability[(date, s)] += 1
 
-    return max(availability, key=availability.get)
+    max_key = max(availability, key=availability.get)
+    max_value = availability[max_key]
+
+    return max_key, max_value, n_total_responses
