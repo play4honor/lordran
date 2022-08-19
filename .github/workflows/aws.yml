@@ -11,8 +11,8 @@
 
 on:
   push:
-    branches:
-      - main
+    tag:
+      - "**-deploy"
 
 name: Deploy to Amazon ECS
 

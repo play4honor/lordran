@@ -85,11 +85,10 @@ def check_closing():
         event_form = FormReader(id)
         event_form.read_form()
 
-        schedule_time = build_availability(
+        schedule_time, schedule_attendees, schedule_responders = build_availability(
             event_form.parsed_results,
             event_start,
             event_end,
-            event_length,
         )
 
         q.set_event_as_scheduled(db, id)
@@ -99,6 +98,8 @@ def check_closing():
                 "channel_id": channel_id,
                 "name": name,
                 "schedule_time": schedule_time,
+                "schedule_attendees": schedule_attendees,
+                "schedule_responders": schedule_responders,
                 "event_length": event_length,
                 "timezone": timezone,
             }
