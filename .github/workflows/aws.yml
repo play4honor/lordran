@@ -11,7 +11,7 @@
 
 on:
   push:
-    tag:
+    tags:
       - '**-deploy'
 
 name: Deploy to Amazon ECS
