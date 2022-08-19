@@ -148,14 +148,6 @@ async def plan(ctx, *event_name):
         await author.send("Failed to save event details, go yell at your bot admin")
 
 
-@bot.command()
-async def cancel():
-    """
-    Not Implemented
-    """
-    pass
-
-
 # @bot.event
 # async def on_message(message):
 #     if message.author == bot.user:
