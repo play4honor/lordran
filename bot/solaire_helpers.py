@@ -113,7 +113,7 @@ def create_event_request_json(
 
 class Solaire(commands.Bot):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, intents=discord.Intents.default())
 
     async def validated_response(self, ctx, question, error_msg, validation_func):
 
