@@ -73,7 +73,7 @@ class FormWriter(Form):
                 {
                     "createItem": {
                         "item": {
-                            "title": "What times are you available?",
+                            "title": f"What times are you available for a {form_info['event_length']} hour event?",
                             "description": f"Times are in UTC{form_info['timezone']}",
                             "questionGroupItem": {
                                 "questions": hr_arr,
@@ -120,7 +120,7 @@ class FormReader(Form):
                 response_dict[date['value']].append(int(tm))                
         return response_dict
 
-def build_availability(parsed_results, start_time, end_time, event_length):
+def build_availability(parsed_results, start_time, end_time):
 
     availability = defaultdict(lambda: 0)
 
