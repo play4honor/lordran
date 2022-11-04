@@ -54,11 +54,11 @@ async def plan(ctx, *event_name):
         ctx,
         f"Would you like to continue planning event {event_name}?",
         "wat",
-        lambda x: x,
+        sh.get_choice,
     )
 
-    if continue_resp.lower() not in {"yes", "y", "ye", "ya", "yiss"}:
-        logger.info("dirty quitter")
+    if not continue_resp:
+        await author.send("dirty quitter")
         return
 
     user_tz = requests.post(QUELAAG_GET_TZ_URL, json={"user_id": author.id}).json()["tz"]
@@ -115,13 +115,18 @@ async def plan(ctx, *event_name):
         sh.get_expiration,
     )
 
-    logger.info(f"guild: {ctx.guild.id}")
-    logger.info(f"channel: {ctx.channel.id}")
-    logger.info(event_name)
-    logger.info(date_resp)
-    logger.info(time_of_day)
-    logger.info(event_length)
-    logger.info(expiration_time)
+    # @here
+    at_here = await bot.validated_response(
+        ctx,
+        "Would you like to at-here the channel upon creating a planning link?",
+        "bruh",
+        sh.get_choice,
+    )
+
+    if at_here:
+        here_str = "@here"
+    else:
+        here_str = ""
 
     event_request = sh.create_event_request_json(
         ctx.guild.id,
@@ -141,7 +146,7 @@ async def plan(ctx, *event_name):
             f"Planning complete, see {ctx.channel.mention} for your planning link"
         )
         await ctx.channel.send(
-            f"Planning URL for {event_request['name']}: {response.json()['form_url']}. Please respond within {expiration_time} hours."
+            f"{here_str} Planning URL for {event_request['name']}: {response.json()['form_url']}. Please respond within {expiration_time} hours."
         )
         requests.get(QUELAAG_SYNC_DB_URL)
     else:

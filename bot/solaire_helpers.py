@@ -76,6 +76,14 @@ def get_expiration(res):
         hrs = None
     return hrs
 
+def get_choice(res):
+    if res.lower() in ["yes", "y", "ye", "yiss", "yeah", "ok", "true", "t"]:
+        return True
+    elif res.lower() in ["no", "n", "nah", "f", "nah bro", "false", "who even"]:
+        return False
+    else:
+        return None
+
 def make_iso_timestamp(date, hours, tz=0):
 
     date_as_date = datetime.date.fromisoformat(date)
