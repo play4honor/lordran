@@ -84,27 +84,39 @@ def check_closing():
     ) in new_events:
 
         event_form = FormReader(id)
-        event_form.read_form()
+        if event_form.has_responders:
 
-        schedule_time, schedule_attendees, schedule_responders = build_availability(
-            event_form.parsed_results,
-            event_start,
-            event_end,
-        )
+            event_form.read_form()
 
-        q.set_event_as_scheduled(db, id)
-        events.append(
-            {
-                "guild_id": guild_id,
-                "channel_id": channel_id,
-                "name": name,
-                "schedule_time": schedule_time,
-                "schedule_attendees": schedule_attendees,
-                "schedule_responders": schedule_responders,
-                "event_length": event_length,
-                "timezone": timezone,
-            }
-        )
+            schedule_time, schedule_attendees, schedule_responders = build_availability(
+                event_form.parsed_results,
+                event_start,
+                event_end,
+            )
+
+            q.set_event_as_scheduled(db, id)
+            events.append(
+                {
+                    "guild_id": guild_id,
+                    "channel_id": channel_id,
+                    "name": name,
+                    "schedule_time": schedule_time,
+                    "schedule_attendees": schedule_attendees,
+                    "schedule_responders": schedule_responders,
+                    "event_length": event_length,
+                    "timezone": timezone,
+                }
+            )
+
+        else:
+            q.set_event_as_scheduled(db, id)
+            events.append(
+                {
+                    "guild_id": guild_id,
+                    "channel_id": channel_id,
+                    "name": name,
+                }
+            )
 
     return jsonify(events)
 

@@ -110,8 +110,12 @@ class FormReader(Form):
 
     def read_form(self):
         self.form_results = self.form_service.forms().responses().list(formId=self.form_id).execute()
-        self.parsed_results = [self._parse_response(response) for response in self.form_results["responses"]]
-        self.ordered_reponders = [response['responseId'] for response in self.form_results["responses"]]
+        if 'responses' in self.form_results:
+            self.parsed_results = [self._parse_response(response) for response in self.form_results["responses"]]
+            self.ordered_reponders = [response['responseId'] for response in self.form_results["responses"]]
+        else:
+            self.parsed_results = None
+            self.ordered_reponders = None
  
     def _parse_response(self, response):
         response_dict = defaultdict(list)
