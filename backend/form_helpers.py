@@ -107,13 +107,16 @@ class FormReader(Form):
     def __init__(self, form_id):
         super().__init__()
         self.form_id = form_id
+        self.has_responders = False
 
     def read_form(self):
         self.form_results = self.form_service.forms().responses().list(formId=self.form_id).execute()
         if 'responses' in self.form_results:
+            self.has_responders = True
             self.parsed_results = [self._parse_response(response) for response in self.form_results["responses"]]
             self.ordered_reponders = [response['responseId'] for response in self.form_results["responses"]]
         else:
+            self.has_responders = False
             self.parsed_results = None
             self.ordered_reponders = None
  
