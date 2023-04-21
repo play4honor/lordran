@@ -170,32 +170,43 @@ async def check_for_ready_events():
         event_manager = DiscordEvents(bot_key)
 
         for event in parsed_response:
-            start_time = sh.make_iso_timestamp(
-                event["schedule_time"][0], event["schedule_time"][1], event["timezone"]
-            )
-            end_time = sh.make_iso_timestamp(
-                event["schedule_time"][0],
-                event["schedule_time"][1] + int(event["event_length"]),
-                event["timezone"],
-            )
-            scheduled = await event_manager.create_guild_event(
-                guild_id=event["guild_id"],
-                event_name=event["name"],
-                event_description=f"Solaire scheduled {event['event_length']}-hour event for {event['name']}, {event['schedule_attendees']} available of {event['schedule_responders']} responders",
-                event_start_time=start_time,
-                event_end_time=end_time,
-                event_metadata={"location": "Lordran"},
-            )
-            if scheduled:
+
+            if "schedule_time" in event:
+                # If there were responses and we were able to schedule the event
+
+                start_time = sh.make_iso_timestamp(
+                    event["schedule_time"][0], event["schedule_time"][1], event["timezone"]
+                )
+                end_time = sh.make_iso_timestamp(
+                    event["schedule_time"][0],
+                    event["schedule_time"][1] + int(event["event_length"]),
+                    event["timezone"],
+                )
+                scheduled = await event_manager.create_guild_event(
+                    guild_id=event["guild_id"],
+                    event_name=event["name"],
+                    event_description=f"Solaire scheduled {event['event_length']}-hour event for {event['name']}, {event['schedule_attendees']} available of {event['schedule_responders']} responders",
+                    event_start_time=start_time,
+                    event_end_time=end_time,
+                    event_metadata={"location": "Lordran"},
+                )
+                if scheduled:
+                    logger.info(
+                        f"Scheduled event {event['name']} for {start_time} - {end_time}"
+                    )
+                    ch = await bot.fetch_channel(event["channel_id"])
+                    await ch.send(f"Event Scheduled for {event['name']}")
+                else:
+                    logger.info(
+                        f"Scheduling Failed for {event['name']} for {start_time} - {end_time}"
+                    )
+            else:
+                # If the event had 0 responses and we can't schedule
                 logger.info(
-                    f"Scheduled event {event['name']} for {start_time} - {end_time}"
+                    f"Failed to schedule {event['name']} due to 0 responses"
                 )
                 ch = await bot.fetch_channel(event["channel_id"])
-                await ch.send(f"Event Scheduled for {event['name']}")
-            else:
-                logger.info(
-                    f"Scheduling Failed for {event['name']} for {start_time} - {end_time}"
-                )
+                await ch.send(f"No one wanted to go to {event['name']}, sorry :(")
 
         requests.get(QUELAAG_SYNC_DB_URL)
 
