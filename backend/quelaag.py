@@ -70,7 +70,6 @@ def check_closing():
 
     db = get_db()
     new_events = q.get_events(db, right_now)
-
     events = []
     for (
         guild_id,
@@ -84,10 +83,8 @@ def check_closing():
     ) in new_events:
 
         event_form = FormReader(id)
+        event_form.read_form()
         if event_form.has_responders:
-
-            event_form.read_form()
-
             schedule_time, schedule_attendees, schedule_responders = build_availability(
                 event_form.parsed_results,
                 event_start,
@@ -128,14 +125,14 @@ def sync_db():
         g.s3_client = boto3.client("s3")
 
     g.s3_client.upload_file(LOCAL_DB_PATH, "lordran-bot", "quelaag.db")
-
+    gunicorn_logger.info("db synced to s3")
     return jsonify(success=True)
 
 
 def get_db():
 
     # If there's not already a database connection.
-    if "db" not in g:
+    if not os.path.exists(LOCAL_DB_PATH):
 
         if "s3_client" not in g:
             g.s3_client = boto3.client("s3")
@@ -143,12 +140,17 @@ def get_db():
         try:
             g.s3_client.download_file("lordran-bot", "quelaag.db", LOCAL_DB_PATH)
             g.db = sqlite3.connect(LOCAL_DB_PATH)
+            gunicorn_logger.info("Retrieved db from s3")
         except ClientError as e:
             if int(e.response["Error"]["Code"]) == 404:
                 g.db = sqlite3.connect(LOCAL_DB_PATH)
                 q.init_tables(g.db)
+                gunicorn_logger.info("Creating new db")
             else:
                 raise e
+            
+    elif "db" not in g:
+        g.db = sqlite3.connect(LOCAL_DB_PATH)
 
     return g.db
 

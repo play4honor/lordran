@@ -13,7 +13,6 @@ SCOPES = [
 DISCOVERY_DOC = "https://forms.googleapis.com/$discovery/rest?version=v1"
 SERVICE_KEY = json.loads(base64.b64decode(os.environ["FORMS_CREDENTIALS"]).decode('ascii'))
 
-
 class Form:
     def __init__(self):
         self.creds = service_account.Credentials.from_service_account_info(

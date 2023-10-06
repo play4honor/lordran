@@ -81,7 +81,7 @@ async def plan(ctx, *event_name):
         if response.status_code != 200:
             await author.send("Failed to save event details, go yell at your bot admin")
 
-    await author.send(f"You're in the UTC{tz_resp} timezone.")
+    await author.send(f"You're in the UTC{sh.make_utc_string(tz_resp)} timezone.")
 
     # Event Dates
     date_resp = await bot.validated_response(
