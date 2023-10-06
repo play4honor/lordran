@@ -18,17 +18,16 @@ def get_utc_offset(local_time: datetime.time):
 
 
 def get_time_response(res):
-
     try:
         tm = datetime.time.fromisoformat(res)
         utc_offset = get_utc_offset(tm)
-        prefix = "+" if utc_offset > 0 else ""
-        tm_str = f"{prefix}{utc_offset}"
     except ValueError:
-        tm_str = None
+        utc_offset = None
 
-    return tm_str
+    return utc_offset
 
+def make_utc_string(offset):
+    return f"+{offset}" if offset > 0 else f"{offset}"
 
 def get_time_range(res):
 
@@ -122,8 +121,8 @@ def create_event_request_json(
 class Solaire(commands.Bot):
     def __init__(self, *args, **kwargs):
 
-        intents = discord.Intents.default()
-        intents.message_content = True
+        intents = discord.Intents.all()
+        # intents.message_content = True
 
         super().__init__(*args, **kwargs, intents=intents)
 
